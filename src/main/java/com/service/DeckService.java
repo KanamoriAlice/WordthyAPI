@@ -1,0 +1,138 @@
+package com.service;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+//import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.exception.CannotDeleteDefaultException;
+import com.inputdto.PatchDeckDTO;
+import com.model.Deck;
+import com.model.DeckSettings;
+import com.outputdto.DeckDTO;
+import com.repository.CardRepository;
+import com.repository.DeckRepository;
+import com.repository.DeckSettingsRepository;
+
+@Service
+public class DeckService {
+	
+	@Autowired
+	private DeckRepository deckRepository;
+	@Autowired
+	private DeckSettingsRepository deckSettingsRepository;
+	@Autowired
+	private CardRepository cardRepository;
+//	@Autowired
+//	private ModelMapper mapper;
+
+	public boolean checkIfNameExists(String name) {
+		return deckRepository.findByName(name) != null;
+	}
+	
+	@Transactional
+	public void delete(String name) throws CannotDeleteDefaultException {
+		Deck deck = deckRepository.findByName(name);
+		cardRepository.deleteAllByDeckId(deck.getId());
+		deckRepository.deleteAllByParentDeckId(deck.getId());
+		deckRepository.delete(deck);
+	}
+	
+	public List<DeckDTO> getAllNames() {
+		List<Deck> decks = deckRepository.findAll();
+		Map<String, String> parentDecks = new HashMap<>();
+		decks.stream().forEach(deck ->
+			parentDecks.put(deck.getId(), deck.getName()));
+		return decks.stream()
+				.map(deck -> {
+					String parentDeck = parentDecks.get(deck.getParentDeckId());
+					if(parentDeck != null)
+						return new DeckDTO(parentDeck, deck.getName());
+					return new DeckDTO("", deck.getName());
+				}).collect(Collectors.toList());
+	}
+	
+	public void incrementNewCardsReviewed(String name) {
+		Deck deck = deckRepository.findByName(name);
+		int newCardCounter = deck.getNewCardsReviewed();
+		deck.setNewCardsReviewed(++newCardCounter);
+	}
+	
+	public void incrementReviewCardsReviewed(String name) {
+		Deck deck = deckRepository.findByName(name);
+		int learnedCardsCounter = deck.getLearnedCardsReviewed();
+		deck.setLearnedCardsReviewed(++learnedCardsCounter);
+	}
+	
+	public void patch(String name, PatchDeckDTO dto) {
+		Deck deck = deckRepository.findByName(name);
+		if(!dto.getParentDeck().isEmpty()) {
+			Deck parentDeck = deckRepository.findByName(dto.getParentDeck());
+			deck.setParentDeckId(parentDeck.getId());
+		} else
+			deck.setParentDeckId(null);
+		if(!dto.getNewName().equals(name))
+			deck.setName(dto.getNewName());
+		DeckSettings deckSettings = deckSettingsRepository.findByName(dto.getDeckSettings());
+		deck.setDeckSettingsId(deckSettings.getId());
+		deckRepository.save(deck);
+	}
+	
+	public void post(String name) {
+		DeckSettings deckSettings = deckSettingsRepository.findByName("default");
+		Deck deck = new Deck(deckSettings.getId(), name);
+		deckRepository.save(deck);
+	}
+	
+//	public void removeParentDeck(String deckName) {
+//		Deck deck = deckRepository.findByName(deckName);
+//		deck.setParentDeckId(null);
+//		deckRepository.save(deck);
+//	}
+	
+//	public void rename(String deckName,String newName) throws CannotRenameDefaultException {
+//		Deck deck = deckRepository.findByName(deckName);
+//		deck.setName(newName);
+//		deckRepository.save(deck);
+//	}
+//	
+//	public void setDeckSettings(String deckName, String deckSettingsName) {
+//		Deck deck = deckRepository.findByName(deckName);
+//		DeckSettings deckSettings = deckSettingsRepository.findByName(deckSettingsName);
+//		deck.setDeckSettingsId(deckSettings.getId());
+//		deckRepository.save(deck);
+//	}
+//	
+//	public void setParentDeck(String deckName, String parentDeckName) {
+//		Deck deck = deckRepository.findByName(deckName);
+//		Deck parentDeck = deckRepository.findByName(parentDeckName);
+//		deck.setParentDeckId(parentDeck.getId());
+//		deckRepository.save(deck);
+//	}
+	
+	//TODO Check if there's a better way to write this code
+	public void resetAllDeckCounters() {
+		List<Deck> decks = deckRepository.findAll();
+		decks.stream()
+		.filter(x -> x.getLastUpdated().isBefore(LocalDate.now()))
+		.forEach(x -> {
+			x.setNewCardsReviewed(0);
+			x.setLearnedCardsReviewed(0);
+			x.setLastUpdated(LocalDate.now());
+		});
+		deckRepository.saveAll(decks);
+	}
+	
+	//PRIVATE METHODS
+	//Converts an DeckDTO object to a Deck
+//	private Deck mapDTOToDeck(DeckDTO deckDTO) {
+//		return mapper.map(deckDTO, Deck.class);
+//	}
+
+}
