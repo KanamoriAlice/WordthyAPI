@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.exception.CannotDeleteDefaultException;
 import com.exception.CannotRenameDefaultException;
@@ -28,132 +30,144 @@ import com.generaldto.GeneralSettingsDTO;
 import com.generaldto.LapseSettingsDTO;
 import com.generaldto.NewCardSettingsDTO;
 import com.generaldto.ReviewSettingsDTO;
-import com.inputdto.OnlyNameDTO;
-import com.inputdto.RenameDTO;
 import com.model.DeckSettings;
 import com.service.DeckSettingsService;
 
-@Controller
+import io.swagger.v3.oas.annotations.Operation;
+
+@RestController
 @RequestMapping("/deckSettings")
+@Validated
 public class DeckSettingsController {
 	
 	@Autowired
 	DeckSettingsService deckSettingsService;
 	
-	@GetMapping
-	public String showView() {
-		return "deckSettings";
-	}
-	
-	@PostMapping("/create")
+	@Operation(summary = "Add a new deck settings")
+	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public void create(@Valid @RequestBody OnlyNameDTO deckSettingsName) {
-		String newName = deckSettingsName.getName();
-		if (deckSettingsService.checkIfNameExists(newName))
-			throw new NameAlreadyExistsException(DeckSettings.class, newName);
-		deckSettingsService.create(newName);
+	public void post(
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    if (deckSettingsService.checkIfNameExists(name))
+	        throw new NameAlreadyExistsException(DeckSettings.class, name);
+	    deckSettingsService.post(name);
 	}
-	
-	@DeleteMapping("/delete")
+
+	@Operation(summary = "Delete a deck settings by its name")
+	@DeleteMapping("/{name}")
 	@ResponseStatus(HttpStatus.OK)
-	public void delete(@Valid @RequestBody OnlyNameDTO deckSettingsName) {
-		String currentName = deckSettingsName.getName();
-			if(currentName.equals("default"))
-				throw new CannotDeleteDefaultException(DeckSettings.class);
-			if (!deckSettingsService.checkIfNameExists(currentName))
-				throw new NameDoesNotExistException(DeckSettings.class, currentName);
-			deckSettingsService.delete(currentName);
+	public void delete(
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    if(name.equals("default"))
+	        throw new CannotDeleteDefaultException(DeckSettings.class);
+	    if (!deckSettingsService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(DeckSettings.class, name);
+	    deckSettingsService.delete(name);
 	}
-	
+
+	@Operation(summary = "Get all deck settings names")
 	@GetMapping("/allNames")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<String> getAllDeckSettingsNames() {
-		return deckSettingsService.getAllNames();
+	    return deckSettingsService.getAllNames();
 	}
-	
-	@GetMapping("/lapseSettings/{name}")
+
+	@Operation(summary = "Get lapse settings by deck settings name")
+	@GetMapping("/{name}/lapseSettings")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public LapseSettingsDTO getLapseSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name) {
-		return deckSettingsService.getLapseSettings(name);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    return deckSettingsService.getLapseSettings(name);
 	}
-	
-	@GetMapping("/generalSettings/{name}")
+
+	@Operation(summary = "Get general settings by deck settings name")
+	@GetMapping("/{name}/generalSettings")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public GeneralSettingsDTO getGeneralSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name) {
-		return deckSettingsService.getGeneralSettings(name);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    return deckSettingsService.getGeneralSettings(name);
 	}
-	
-	@GetMapping("/newCardSettings/{name}")
+
+	@Operation(summary = "Get new card settings by deck settings name")
+	@GetMapping("/{name}/newCardSettings")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public NewCardSettingsDTO getNewCardSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name) {
-		return deckSettingsService.getNewCardSettings(name);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    return deckSettingsService.getNewCardSettings(name);
 	}
-	
-	@GetMapping("/reviewSettings/{name}")
+
+	@Operation(summary = "Get review settings by deck settings name")
+	@GetMapping("/{name}/reviewSettings")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public ReviewSettingsDTO getReviewSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name) {
-		return deckSettingsService.getReviewSettings(name);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name) {
+	    return deckSettingsService.getReviewSettings(name);
 	}
 	
-	@PatchMapping("/lapseSettings/{name}")
+	@Operation(summary = "Update lapse settings by deck settings name")
+	@PatchMapping("/{name}/lapseSettings")
 	@ResponseStatus(HttpStatus.OK)
 	public void patchLapseSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name,
-			@Valid @RequestBody LapseSettingsDTO dto) {
-		deckSettingsService.patchLapseSettings(name, dto);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @Valid @RequestBody LapseSettingsDTO dto) {
+	    deckSettingsService.patchLapseSettings(name, dto);
 	}
-	
-	@PatchMapping("/generalSettings/{name}")
+
+	@Operation(summary = "Update general settings by deck settings name")
+	@PatchMapping("/{name}/generalSettings")
 	@ResponseStatus(HttpStatus.OK)
 	public void patchGeneralSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name,
-			@Valid @RequestBody GeneralSettingsDTO dto) {
-		deckSettingsService.patchGeneralSettings(name, dto);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @Valid @RequestBody GeneralSettingsDTO dto) {
+	    deckSettingsService.patchGeneralSettings(name, dto);
 	}
-	
-	@PatchMapping("/newCardSettings/{name}")
+
+	@Operation(summary = "Update new card settings by deck settings name")
+	@PatchMapping("/{name}/newCardSettings")
 	@ResponseStatus(HttpStatus.OK)
 	public void patchNewCardSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name,
-			@Valid @RequestBody NewCardSettingsDTO dto) {
-		deckSettingsService.patchNewCardSettings(name, dto);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @Valid @RequestBody NewCardSettingsDTO dto) {
+	    deckSettingsService.patchNewCardSettings(name, dto);
 	}
-	
-	@PatchMapping("/reviewSettings/{name}")
+
+	@Operation(summary = "Update review settings by deck settings name")
+	@PatchMapping("/{name}/reviewSettings")
 	@ResponseStatus(HttpStatus.OK)
 	public void patchGeneralSettings(
-			@NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-			@Valid @PathVariable String name,
-			@Valid @RequestBody ReviewSettingsDTO dto) {
-		deckSettingsService.patchReviewSettings(name, dto);
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @Valid @RequestBody ReviewSettingsDTO dto) {
+	    deckSettingsService.patchReviewSettings(name, dto);
 	}
-	
-	@PatchMapping("/rename")
+
+	@Operation(summary = "Rename a deck settings by its name")
+	@PatchMapping("/{name}/rename")
 	@ResponseStatus(HttpStatus.OK)
-	public void rename(@Valid @RequestBody RenameDTO names) {
-		String currentName = names.getCurrentName();
-		String newName = names.getNewName();
-		if(currentName.equals("default"))
-			throw new CannotRenameDefaultException(DeckSettings.class);
-		if (!deckSettingsService.checkIfNameExists(currentName))
-			throw new NameDoesNotExistException(DeckSettings.class, currentName);
-		deckSettingsService.rename(currentName, newName);
+	public void rename(
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @NotBlank(message = "New" + DECK_SETTINGS_NOT_BLANK)
+	        @RequestParam String newName) {
+	    if(name.equals("default"))
+	        throw new CannotRenameDefaultException(DeckSettings.class);
+	    if (!deckSettingsService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(DeckSettings.class, name);
+	    deckSettingsService.rename(name, newName);
 	}
 
 }

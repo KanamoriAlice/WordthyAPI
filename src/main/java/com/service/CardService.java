@@ -3,18 +3,20 @@ package com.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.exception.CardDoesNotExistException;
 import com.exception.IllegalCardStateException;
-import com.inputdto.AddCardDTO;
-import com.inputdto.CardAnswerDTO;
-import com.inputdto.CardUpdateDTO;
+import com.inputdto.PostCardDTO;
+import com.inputdto.PatchCardDTO;
 import com.model.Card;
 import com.model.CardAnswer;
 import com.model.CardReview;
@@ -24,7 +26,7 @@ import com.model.CardTag;
 import com.model.CardType;
 import com.model.Deck;
 import com.model.DeckSettings;
-import com.outputdto.CardDTO;
+import com.outputdto.GetCardDTO;
 import com.repository.CardRepository;
 import com.repository.CardTagRepository;
 import com.repository.CardTypeRepository;
@@ -46,34 +48,8 @@ public class CardService {
 	private DeckSettingsRepository deckSettingsRepository;
 
 	// PUBLIC METHODS
-	public void addTag(String cardId, String tagName) {
-		Optional<Card> cardOpt = cardRepository.findById(cardId);
-		if (cardOpt.isPresent()) {
-			Card card = cardOpt.get();
-			CardTag cardTag = cardTagRepository.findByName(tagName);
-			card.getCardTagsId().add(cardTag.getId());
-			cardRepository.save(card);
-		}
-	}
-	
-	public List<CardDTO> convertToCardDTOList(List<Card> cards) {
-		List<CardDTO> dto = new ArrayList<>();
-		if (cards.isEmpty())
-			return dto;
-		CardType cardType = cardTypeRepository.findById(cards.get(0).getCardTypeId())
-				.orElseThrow(IllegalCardStateException::new);
-		for (Card card : cards)
-			if (!card.getCardTypeId().equals(cardType.getId()))
-				cardType = cardTypeRepository.findById(card.getCardTypeId())
-						.orElseThrow(IllegalCardStateException::new);
-			else
-				dto.add(new CardDTO(card.getId(), cardType.getBack(),
-						cardType.getFormatting(), cardType.getFront(),
-						card.getFields(), cardType.getFieldNames()));
-		return dto;
-	}
 
-	public void create(AddCardDTO registrationCard) {
+	public void post(PostCardDTO registrationCard) {
 		Deck deck = deckRepository.findByName(registrationCard.getDeckName());
 		CardType cardType = cardTypeRepository.findByName(registrationCard.getCardTypeName());
 		Optional<DeckSettings> deckSettingsOpt = deckSettingsRepository.findById(deck.getDeckSettingsId());
@@ -82,34 +58,52 @@ public class CardService {
 					registrationCard.getFields());
 			cardRepository.save(card);
 		}
-	}
+	}	
 
 	public void delete(String id) {
 		cardRepository.deleteById(id);
 	}
+	
+	//This method does take TIME
+	public Page<GetCardDTO> getAllCardsByPages(int pageNumber, int pageSize) {
+	  Pageable pageable = PageRequest.of(pageNumber, pageSize);
+	  Page<Card> cards = cardRepository.findAll(pageable);
+	  return cards.map(card -> {
+		  Deck deck = deckRepository.findById(card.getDeckId())
+				  .orElseThrow(IllegalCardStateException::new);
+		  CardType cardType = cardTypeRepository.findById(card.getCardTypeId())
+				  .orElseThrow(IllegalCardStateException::new);
+		  Set<String> tags = card.getCardTagsId().stream()
+				  .map(x -> cardTagRepository.findById(x)
+						  .orElseThrow(IllegalCardStateException::new).getName())
+				  .collect(Collectors.toSet());
+		  return new GetCardDTO(card.getId(), deck.getName(),
+				  cardType.getName(), card.getFields(), cardType.getFieldNames(), tags);
+	  });
+	}
 
 	// Returns new card status
-	public CardStatus schedule(CardAnswerDTO cardAnswer) {
-		Card card = cardRepository.findById(cardAnswer.getId())
+	public CardStatus schedule(String id, CardAnswer answer) {
+		Card card = cardRepository.findById(id)
 				.orElseThrow(CardDoesNotExistException::new);
 		Deck deck = deckRepository.findById(card.getDeckId())
 				.orElseThrow(IllegalCardStateException::new);
 		DeckSettings deckSettings = deckSettingsRepository.findById(deck.getDeckSettingsId())
 				.orElseThrow(IllegalCardStateException::new);
-		recordCardAnswer(card, cardAnswer.getAnswer());
+		recordCardAnswer(card, answer);
 		switch (card.getCardStatus()) {
 			case NEW:
-				scheduleNewCard(card, cardAnswer.getAnswer(), deckSettings);
+				scheduleNewCard(card, answer, deckSettings);
 				if (card.getCardStatus() == CardStatus.LEARNED)
 					deck.setNewCardsReviewed(deck.getNewCardsReviewed() + 1);
 				break;
 			case LEARNED:
-				scheduleLearnedCard(card, cardAnswer.getAnswer(), deckSettings);
+				scheduleLearnedCard(card, answer, deckSettings);
 				if (card.getCardStatus() == CardStatus.LEARNED)
 					deck.setLearnedCardsReviewed(deck.getLearnedCardsReviewed() + 1);
 				break;
 			case LAPSED:
-				scheduleLapsed(card, cardAnswer.getAnswer(), deckSettings);
+				scheduleLapsed(card, answer, deckSettings);
 				break;
 			default:
 		}
@@ -121,27 +115,10 @@ public class CardService {
 		return card.getCardStatus();
 	}
 
-	public void removeTag(String cardId, String tagName) {
-		Optional<Card> cardOpt = cardRepository.findById(cardId);
-		if (cardOpt.isPresent()) {
-			Card card = cardOpt.get();
-			card.getCardTagsId().remove(tagName);
-			cardRepository.save(card);
-		}
-	}
-
 	public void suspend(String cardId) {
 		Card card = cardRepository.findById(cardId)
 				.orElseThrow(IllegalCardStateException::new);
 		card.setCardStatus(CardStatus.SUSPENDED);
-		cardRepository.save(card);
-	}
-
-	public void unsuspend(String cardId) {
-		Card card = cardRepository.findById(cardId)
-				.orElseThrow(IllegalCardStateException::new);
-		card.setCardStatus(CardStatus.LEARNED);
-		resetLapseCount(card);
 		cardRepository.save(card);
 	}
 
@@ -189,7 +166,7 @@ public class CardService {
 			setSteps(card, CardStatus.NEW, deckSettings);
 		// CardAnswer was GOOD
 		else if (cardSteps > 0)
-			scheduleSettings.setSteps(cardSteps - 2);
+			scheduleSettings.setSteps(--cardSteps);
 		else {
 			scheduleSettings.setInterval(
 					deckSettings.getNewCardSettings().getGraduatingInterval());
@@ -214,18 +191,57 @@ public class CardService {
 	private void resetLapseCount(Card card) {
 		card.getCardStats().setLapseCount(0);
 	}
-
-	public List<CardDTO> getByDeckName(String deckName) {
-		Deck deck = deckRepository.findByName(deckName);
-		List<CardDTO> cardsOfDeck;
-		cardsOfDeck = convertToCardDTOList(cardRepository.findAllByDeckId(deck.getId()));
-		return cardsOfDeck;
-	}
-
-	public void updateFields(CardUpdateDTO cardUpdateDTO) {
-		Card card = cardRepository.findById(cardUpdateDTO.getId())
-				.orElseThrow(IllegalCardStateException::new);
-		card.setFields(cardUpdateDTO.getFields());
+	
+	public void unsuspend(String cardId) {
+		Card card = cardRepository.findById(cardId)
+				.orElseThrow(CardDoesNotExistException::new);
+		card.setCardStatus(CardStatus.LEARNED);
+		resetLapseCount(card);
 		cardRepository.save(card);
 	}
+
+	public void patch(String id, PatchCardDTO dto) {
+		Card card = cardRepository.findById(id)
+				.orElseThrow(CardDoesNotExistException::new);
+		Deck deck = deckRepository.findByName(dto.getDeck());
+		card.setDeckId(deck.getId());
+		CardType cardType = cardTypeRepository.findByName(dto.getCardType());
+		if(!dto.getCardType().equals(cardType.getName())) {
+			card.setCardTypeId(cardType.getId());
+			card.setFields(dto.getFields());
+		}
+		card.setCardTagsId(dto.getTags().stream()
+				.map(cardTagRepository::findByName)
+				.collect(Collectors.toSet()).stream()
+				.map(CardTag::getName).collect(Collectors.toSet()));
+		cardRepository.save(card);
+	}
+	
+	//Retiring methods
+	
+//	public void addTag(String cardId, String tagName) {
+//		Optional<Card> cardOpt = cardRepository.findById(cardId);
+//		if (cardOpt.isPresent()) {
+//			Card card = cardOpt.get();
+//			CardTag cardTag = cardTagRepository.findByName(tagName);
+//			card.getCardTagsId().add(cardTag.getId());
+//			cardRepository.save(card);
+//		}
+//	}
+	
+//	public void removeTag(String cardId, String tagName) {
+//		Optional<Card> cardOpt = cardRepository.findById(cardId);
+//		if (cardOpt.isPresent()) {
+//			Card card = cardOpt.get();
+//			card.getCardTagsId().remove(tagName);
+//			cardRepository.save(card);
+//		}
+//	}
+	
+//	public void updateFields(CardUpdateDTO cardUpdateDTO) {
+//		Card card = cardRepository.findById(cardUpdateDTO.getId())
+//				.orElseThrow(CardDoesNotExistException::new);
+//		card.setFields(cardUpdateDTO.getFields());
+//		cardRepository.save(card);
+//	}
 }

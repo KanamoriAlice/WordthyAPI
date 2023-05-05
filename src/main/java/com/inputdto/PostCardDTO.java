@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class AddCardDTO {
+public class PostCardDTO {
 	
 	@NotBlank(message = "Name cannot be empty nor null")
 	private String cardTypeName;

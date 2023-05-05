@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RenameCardTypeParameterDTO {
 
-	@NotBlank(message = "name cannot be empty nor null")
-	private String cardTypeName;
 	@NotBlank(message = "Parameter name cannot be empty nor null")
 	private String parameterName;
 	@NotBlank(message = "New parameter name cannot be empty nor null")

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +27,7 @@ import com.exception.NameAlreadyExistsException;
 import com.exception.NameDoesNotExistException;
 import com.inputdto.PatchDeckDTO;
 import com.model.Deck;
+import com.outputdto.CardPlayDTO;
 import com.outputdto.DeckDTO;
 import com.service.DeckService;
 
@@ -36,7 +38,6 @@ import io.swagger.v3.oas.annotations.Operation;
 @Validated
 public class DeckController {
 	
-	
 	@Autowired
 	private DeckService deckService;
 	
@@ -44,57 +45,72 @@ public class DeckController {
 	@DeleteMapping("/{name}")
 	@ResponseStatus(HttpStatus.OK)
 	public void delete(
-			@NotBlank(message = DECK_NOT_BLANK)
-			@Valid @PathVariable String name) {
-			if(name.equals("default"))
-				throw new CannotDeleteDefaultException(Deck.class);
-			if (!deckService.checkIfNameExists(name))
-				throw new NameDoesNotExistException(Deck.class, name);
-			deckService.delete(name);
+	        @NotBlank(message = DECK_NOT_BLANK)
+	        @Valid @PathVariable String name) {
+	    if(name.equals("default"))
+	        throw new CannotDeleteDefaultException(Deck.class);
+	    if (!deckService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(Deck.class, name);
+	    deckService.delete(name);
 	}
-	
+
+	@Operation(summary = "Get all deck names")
 	@GetMapping("/allNames")
 	@ResponseStatus(HttpStatus.OK)
 	public List<DeckDTO> getAllNames() {
-		return deckService.getAllNames();
+	    return deckService.getAllNames();
 	}
-	
-	@PatchMapping("/incrementNewCardsReviewed/{name}")
+
+	@Operation(summary = "Get all cards by deck name")
+	@GetMapping("/{name}/allCards")
 	@ResponseStatus(HttpStatus.OK)
-	public void incrementNewCardsReviewed(
-			@NotBlank(message = DECK_NOT_BLANK)
-			@PathVariable String name) {
-		deckService.incrementNewCardsReviewed(name);
+	@ResponseBody
+	public List<CardPlayDTO> getAllCards(
+	        @NotBlank(message = DECK_NOT_BLANK)
+	        @Valid @RequestParam("deckName") String name) {
+	    return deckService.getByDeckName(name);
 	}
-	
-	@PatchMapping("/incrementReviewCardsReviewed/{name}")
-	@ResponseStatus(HttpStatus.OK)
-	public void incrementReviewCardsReviewed(
-			@NotBlank(message = DECK_NOT_BLANK)
-			@PathVariable String name) {
-		deckService.incrementReviewCardsReviewed(name);
-	}
-	
+
+	@Operation(summary = "Update a deck by its name")
 	@PatchMapping("/{name}")
 	@ResponseStatus(HttpStatus.OK)
 	public void patch(
-			@NotBlank(message = DECK_NOT_BLANK)
-			@PathVariable String name,
-			@Valid @RequestBody PatchDeckDTO dto) {
-		if(!name.equals(dto.getNewName()) && deckService.checkIfNameExists(dto.getNewName()))
-			throw new NameAlreadyExistsException(Deck.class, name);
-		deckService.patch(name, dto);
+	        @NotBlank(message = DECK_NOT_BLANK)
+	        @PathVariable String name,
+	        @Valid @RequestBody PatchDeckDTO dto) {
+	    if(!name.equals(dto.getNewName()) && deckService.checkIfNameExists(dto.getNewName()))
+	        throw new NameAlreadyExistsException(Deck.class, name);
+	    deckService.patch(name, dto);
 	}
-	
+
+	@Operation(summary = "Add a new deck")
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public void post(
-			@NotBlank(message = DECK_NOT_BLANK)
-			@RequestParam(name = "name") String name) {
-		if(deckService.checkIfNameExists(name))
-			throw new NameAlreadyExistsException(Deck.class, name);
-		deckService.post(name);
+	        @NotBlank(message = DECK_NOT_BLANK)
+	        @RequestParam(name = "name") String name) {
+	    if(deckService.checkIfNameExists(name))
+	        throw new NameAlreadyExistsException(Deck.class, name);
+	    deckService.post(name);
 	}
+	
+	//Retiring methods
+	
+//	@PatchMapping("/incrementNewCardsReviewed/{name}")
+//	@ResponseStatus(HttpStatus.OK)
+//	public void incrementNewCardsReviewed(
+//			@NotBlank(message = DECK_NOT_BLANK)
+//			@PathVariable String name) {
+//		deckService.incrementNewCardsReviewed(name);
+//	}
+//	
+//	@PatchMapping("/incrementReviewCardsReviewed/{name}")
+//	@ResponseStatus(HttpStatus.OK)
+//	public void incrementReviewCardsReviewed(
+//			@NotBlank(message = DECK_NOT_BLANK)
+//			@PathVariable String name) {
+//		deckService.incrementReviewCardsReviewed(name);
+//	}
 	
 //	@PatchMapping("/rename")
 //	@ResponseStatus(HttpStatus.OK)

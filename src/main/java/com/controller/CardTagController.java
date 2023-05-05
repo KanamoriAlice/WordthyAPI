@@ -1,79 +1,87 @@
 package com.controller;
 
+import static com.configuration.TemporaryStrings.CARD_TAG_NOT_BLANK;
+
 import java.util.List;
 
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.exception.CannotDeleteDefaultException;
 import com.exception.CannotRenameDefaultException;
 import com.exception.NameAlreadyExistsException;
 import com.exception.NameDoesNotExistException;
-import com.inputdto.OnlyNameDTO;
-import com.inputdto.RenameDTO;
 import com.model.CardTag;
 import com.service.CardTagService;
 
-@Controller
+import io.swagger.v3.oas.annotations.Operation;
+
+@RestController
 @RequestMapping("/cardTag")
+@Validated
 public class CardTagController {
 	
 	@Autowired
 	CardTagService cardTagService;
-	
-	@GetMapping
-	public String getView() {
-		return "cardTag";
-	}
-	
-	@PostMapping("/create")
-	@ResponseStatus(HttpStatus.CREATED)
-	public void create(@Valid @RequestBody OnlyNameDTO cardTagName) {
-		String newName = cardTagName.getName();
-		if (cardTagService.checkIfNameExists(newName))
-			throw new NameAlreadyExistsException(CardTag.class, newName);
-		cardTagService.create(newName);
-	}
-	
-	@DeleteMapping("/delete")
+
+	@Operation(summary = "Delete a card tag by its name")
+	@DeleteMapping("/{name}")
 	@ResponseStatus(HttpStatus.OK)
-	public void delete(@Valid @RequestBody OnlyNameDTO name) {
-		String currentName = name.getName();
-		if(currentName.equals("default"))
-			throw new CannotDeleteDefaultException(CardTag.class);
-		if (!cardTagService.checkIfNameExists(currentName))
-			throw new NameDoesNotExistException(CardTag.class, currentName);
-		cardTagService.delete(currentName);
+	public void delete(
+	        @NotBlank(message = CARD_TAG_NOT_BLANK)
+	        @PathVariable String name) {
+	    if(name.equals("default"))
+	        throw new CannotDeleteDefaultException(CardTag.class);
+	    if (!cardTagService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(CardTag.class, name);
+	    cardTagService.delete(name);
 	}
-	
-	@GetMapping("/getAllNames")
+
+	@Operation(summary = "Get all card tag names")
+	@GetMapping("/allNames")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<String> getAllNames() {
-		return cardTagService.getAllNames();
+	    return cardTagService.getAllNames();
 	}
 	
-	@PatchMapping("/rename")
+	@Operation(summary = "Rename a card tag by its name")
+	@PatchMapping("/{name}/rename")
 	@ResponseStatus(HttpStatus.OK)
-	public void rename(@Valid @RequestBody RenameDTO names) {
-		String currentName = names.getCurrentName();
-		String newName = names.getNewName();
-		if(currentName.equals("default"))
-			throw new CannotRenameDefaultException(CardTag.class);
-		if (cardTagService.checkIfNameExists(currentName))
-			throw new NameAlreadyExistsException(CardTag.class, currentName);
-		cardTagService.rename(currentName, newName);
+	public void patch(
+	        @NotBlank(message = CARD_TAG_NOT_BLANK)
+	        @PathVariable String name,
+	        @NotBlank(message = "New " + CARD_TAG_NOT_BLANK)
+	        @RequestParam String newName) {
+	    if(name.equals("default"))
+	        throw new CannotRenameDefaultException(CardTag.class);
+	    if (cardTagService.checkIfNameExists(name))
+	        throw new NameAlreadyExistsException(CardTag.class, name);
+	    cardTagService.patch(name, newName);
 	}
 
+	
+	@Operation(summary = "Create a new card tag")
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	public void post(
+	        @NotBlank(message = CARD_TAG_NOT_BLANK)
+	        @PathVariable String name) {
+	    if (cardTagService.checkIfNameExists(name))
+	        throw new NameAlreadyExistsException(CardTag.class, name);
+	    cardTagService.post(name);
+	}
 }

@@ -48,7 +48,7 @@ public class CardQueueController {
 	}
 	
 	@Operation(summary = "Get a DeckReview by deck name")
-	@GetMapping("/deckReview/{name}")
+	@GetMapping("/{name}/deckReview")
 	@ResponseStatus(HttpStatus.OK)
 	public DeckReviewDTO getDeckReview(
 			@Parameter(description = "name of the deck of the DeckReview to be searched")

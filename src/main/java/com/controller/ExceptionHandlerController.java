@@ -19,6 +19,7 @@ import jakarta.validation.ConstraintViolationException;
 @RestControllerAdvice
 public class ExceptionHandlerController {
 	
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(ConstraintViolationException.class)
 	public ResponseEntity<List<ErrorDTO>> handleConstraintExceptions(
 			ConstraintViolationException exception) {
@@ -31,6 +32,7 @@ public class ExceptionHandlerController {
 		return ResponseEntity.badRequest().body(errors);
 	}
 	
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(NameAlreadyExistsException.class)
 	public ResponseEntity<ErrorDTO> handleNameAlreadyExistsException() {
 		return ResponseEntity.internalServerError().body(new ErrorDTO("name", "Name already exists"));

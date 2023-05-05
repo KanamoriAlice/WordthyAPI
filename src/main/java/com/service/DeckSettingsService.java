@@ -39,7 +39,7 @@ public class DeckSettingsService {
 		return deckSettingsRepository.findByName(name) != null;
 	}
 	
-	public void create(String name) {
+	public void post(String name) {
 		DeckSettings deckSettings = new DeckSettings(name);
 		deckSettingsRepository.save(deckSettings);
 	}

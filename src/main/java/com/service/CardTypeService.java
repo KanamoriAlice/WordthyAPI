@@ -49,7 +49,7 @@ public class CardTypeService {
 		return cardType.getFieldNames().contains(name);
 	}
 	
-	public void create(PostCardTypeDTO dto) {
+	public void post(PostCardTypeDTO dto) {
 		CardType cardType = new CardType(dto.getName(), dto.getFields());
 		cardTypeRepository.save(cardType);
 	}

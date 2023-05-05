@@ -1,6 +1,7 @@
 package com.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +13,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.exception.CannotDeleteDefaultException;
+import com.exception.IllegalCardStateException;
 import com.inputdto.PatchDeckDTO;
+import com.model.Card;
+import com.model.CardType;
 import com.model.Deck;
 import com.model.DeckSettings;
+import com.outputdto.CardPlayDTO;
 import com.outputdto.DeckDTO;
 import com.repository.CardRepository;
+import com.repository.CardTypeRepository;
 import com.repository.DeckRepository;
 import com.repository.DeckSettingsRepository;
 
@@ -29,6 +35,8 @@ public class DeckService {
 	private DeckSettingsRepository deckSettingsRepository;
 	@Autowired
 	private CardRepository cardRepository;
+	@Autowired
+	private CardTypeRepository cardTypeRepository;
 //	@Autowired
 //	private ModelMapper mapper;
 
@@ -56,6 +64,13 @@ public class DeckService {
 						return new DeckDTO(parentDeck, deck.getName());
 					return new DeckDTO("", deck.getName());
 				}).collect(Collectors.toList());
+	}
+	
+	public List<CardPlayDTO> getByDeckName(String name) {
+		Deck deck = deckRepository.findByName(name);
+		List<CardPlayDTO> cardsOfDeck;
+		cardsOfDeck = convertToCardDTOList(cardRepository.findAllByDeckId(deck.getId()));
+		return cardsOfDeck;
 	}
 	
 	public void incrementNewCardsReviewed(String name) {
@@ -90,32 +105,6 @@ public class DeckService {
 		deckRepository.save(deck);
 	}
 	
-//	public void removeParentDeck(String deckName) {
-//		Deck deck = deckRepository.findByName(deckName);
-//		deck.setParentDeckId(null);
-//		deckRepository.save(deck);
-//	}
-	
-//	public void rename(String deckName,String newName) throws CannotRenameDefaultException {
-//		Deck deck = deckRepository.findByName(deckName);
-//		deck.setName(newName);
-//		deckRepository.save(deck);
-//	}
-//	
-//	public void setDeckSettings(String deckName, String deckSettingsName) {
-//		Deck deck = deckRepository.findByName(deckName);
-//		DeckSettings deckSettings = deckSettingsRepository.findByName(deckSettingsName);
-//		deck.setDeckSettingsId(deckSettings.getId());
-//		deckRepository.save(deck);
-//	}
-//	
-//	public void setParentDeck(String deckName, String parentDeckName) {
-//		Deck deck = deckRepository.findByName(deckName);
-//		Deck parentDeck = deckRepository.findByName(parentDeckName);
-//		deck.setParentDeckId(parentDeck.getId());
-//		deckRepository.save(deck);
-//	}
-	
 	//TODO Check if there's a better way to write this code
 	public void resetAllDeckCounters() {
 		List<Deck> decks = deckRepository.findAll();
@@ -134,5 +123,50 @@ public class DeckService {
 //	private Deck mapDTOToDeck(DeckDTO deckDTO) {
 //		return mapper.map(deckDTO, Deck.class);
 //	}
+	
+	public List<CardPlayDTO> convertToCardDTOList(List<Card> cards) {
+		List<CardPlayDTO> dto = new ArrayList<>();
+		if (cards.isEmpty())
+			return dto;
+		CardType cardType = cardTypeRepository.findById(cards.get(0).getCardTypeId())
+				.orElseThrow(IllegalCardStateException::new);
+		for (Card card : cards)
+			if (!card.getCardTypeId().equals(cardType.getId()))
+				cardType = cardTypeRepository.findById(card.getCardTypeId())
+						.orElseThrow(IllegalCardStateException::new);
+			else
+				dto.add(new CardPlayDTO(card.getId(), cardType.getBack(),
+						cardType.getFormatting(), cardType.getFront(),
+						card.getFields(), cardType.getFieldNames()));
+		return dto;
+	}
+	
+	//Retiring methods
+	
+//	public void removeParentDeck(String deckName) {
+//	Deck deck = deckRepository.findByName(deckName);
+//	deck.setParentDeckId(null);
+//	deckRepository.save(deck);
+//}
+
+//public void rename(String deckName,String newName) throws CannotRenameDefaultException {
+//	Deck deck = deckRepository.findByName(deckName);
+//	deck.setName(newName);
+//	deckRepository.save(deck);
+//}
+//
+//public void setDeckSettings(String deckName, String deckSettingsName) {
+//	Deck deck = deckRepository.findByName(deckName);
+//	DeckSettings deckSettings = deckSettingsRepository.findByName(deckSettingsName);
+//	deck.setDeckSettingsId(deckSettings.getId());
+//	deckRepository.save(deck);
+//}
+//
+//public void setParentDeck(String deckName, String parentDeckName) {
+//	Deck deck = deckRepository.findByName(deckName);
+//	Deck parentDeck = deckRepository.findByName(parentDeckName);
+//	deck.setParentDeckId(parentDeck.getId());
+//	deckRepository.save(deck);
+//}
 
 }

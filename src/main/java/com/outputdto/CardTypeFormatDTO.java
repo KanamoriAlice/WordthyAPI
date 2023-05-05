@@ -13,6 +13,5 @@ public class CardTypeFormatDTO {
 	private String back;
 	private String formatting;
 	private String front;
-	private String name;
 	
 }

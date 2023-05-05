@@ -23,7 +23,7 @@ public class CardTagService {
 		return cardTagRepository.findByName(name) != null;
 	}
 	
-	public void create(String tagName) {
+	public void post(String tagName) {
 		CardTag cardTag = new CardTag(tagName);
 		cardTagRepository.save(cardTag);
 	}
@@ -42,7 +42,7 @@ public class CardTagService {
 				.collect(Collectors.toList());
 	}
 	
-	public void rename(String tagName, String newName) {
+	public void patch(String tagName, String newName) {
 		CardTag cardTag = cardTagRepository.findByName(tagName);
 		cardTag.setName(newName);
 		cardTagRepository.save(cardTag);

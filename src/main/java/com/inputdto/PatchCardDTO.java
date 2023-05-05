@@ -1,6 +1,7 @@
 package com.inputdto;
 
-import jakarta.validation.constraints.NotBlank;
+import java.util.List;
+import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,10 +11,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-//Used to create, delete and get resources by name
-public class OnlyNameDTO {
+public class PatchCardDTO {
 	
-	@NotBlank(message = "Name cannot be empty nor null")
-	private String name;
+	private String cardType;
+	private String deck;
+	private Set<String> tags;
+	private List<String> fields;
 
 }

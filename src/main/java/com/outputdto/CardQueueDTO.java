@@ -14,9 +14,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CardQueueDTO {
 	
-	private List<CardDTO> newCards;
-	private List<CardDTO> reviewCards;
-	private List<CardDTO> lapsedCards; //Also includes new ones that were "lapsed"
+	private List<CardPlayDTO> newCards;
+	private List<CardPlayDTO> reviewCards;
+	private List<CardPlayDTO> lapsedCards; //Also includes new ones that were "lapsed"
 	private ReviewOrder reviewOrder;
 
 }

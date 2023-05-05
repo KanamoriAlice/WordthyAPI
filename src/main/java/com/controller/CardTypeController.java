@@ -1,21 +1,26 @@
 package com.controller;
 
+import static com.configuration.TemporaryStrings.CARD_TYPE_NOT_BLANK;
+
 import java.util.List;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.exception.CannotDeleteDefaultException;
 import com.exception.CannotRenameDefaultException;
@@ -25,36 +30,23 @@ import com.exception.NameDoesNotExistException;
 import com.exception.ParamaterAlreadyExistsException;
 import com.inputdto.PostCardTypeDTO;
 import com.inputdto.AddRemoveCardTypeParameterDTO;
-import com.inputdto.OnlyNameDTO;
 import com.inputdto.RenameCardTypeParameterDTO;
-import com.inputdto.RenameDTO;
 import com.model.CardTag;
 import com.model.CardType;
 import com.outputdto.CardTypeFormatDTO;
 import com.service.CardTypeService;
 
-@Controller
+import io.swagger.v3.oas.annotations.Operation;
+
+@RestController
 @RequestMapping("/cardType")
+@Validated
 public class CardTypeController {
 
 	@Autowired
 	CardTypeService cardTypeService;
 
-	@GetMapping
-	public String getView() {
-		return "cardType";
-	}
-
-	@PostMapping
-	@ResponseStatus(HttpStatus.CREATED)
-	public void create(@Valid @RequestBody PostCardTypeDTO dto) {
-		String newName = dto.getName();
-		if (cardTypeService.checkIfNameExists(newName))
-			throw new NameAlreadyExistsException(CardTag.class, newName);
-		cardTypeService.create(dto);
-	}
-
-	@PatchMapping("/addParameter")
+	@PatchMapping("/{name}/addParameter")
 	@ResponseStatus(HttpStatus.OK)
 	public void addParameter(@Valid @RequestBody AddRemoveCardTypeParameterDTO dto) {
 		String cardTypeName = dto.getCardTypeName();
@@ -63,12 +55,28 @@ public class CardTypeController {
 			throw new ParamaterAlreadyExistsException();
 		cardTypeService.addParameter(cardTypeName, parameterName);
 	}
+	
+	@Operation(summary = "Delete a card type by its name")
+	@DeleteMapping("/{name}")
+	@ResponseStatus(HttpStatus.OK)
+	public void delete(
+	        @NotBlank(message = CARD_TYPE_NOT_BLANK)
+	        @Valid @PathVariable String name) {
+	    if (name.equals("default"))
+	        throw new CannotDeleteDefaultException(CardType.class);
+	    if (!cardTypeService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(CardType.class, name);
+	    cardTypeService.delete(name);
+	}
 
-	@GetMapping("/getFields")
+	@Operation(summary = "Get all fields of a card type by its name")
+	@GetMapping("/{name}/fields")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<String> getFields(@RequestParam String name) {
-		return cardTypeService.getFields(name);
+	public List<String> getFields(
+	        @NotBlank(message = CARD_TYPE_NOT_BLANK)
+	        @Valid @PathVariable String name) {
+	    return cardTypeService.getFields(name);
 	}
 	
 	@GetMapping("/getFormat")
@@ -78,27 +86,30 @@ public class CardTypeController {
 		return cardTypeService.getFormat(name);
 	}
 
-	@GetMapping("/getAllNames")
+	@Operation(summary = "Get all card type names")
+	@GetMapping("/allNames")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public List<String> getAllNames() {
-		return cardTypeService.getAllNames();
+	    return cardTypeService.getAllNames();
 	}
 
-	@DeleteMapping("/delete")
-	@ResponseStatus(HttpStatus.OK)
-	public void delete(@Valid @RequestBody OnlyNameDTO name) {
-		String currentName = name.getName();
-		if (currentName.equals("default"))
-			throw new CannotDeleteDefaultException(CardType.class);
-		if (!cardTypeService.checkIfNameExists(currentName))
-			throw new NameDoesNotExistException(CardType.class, currentName);
-		cardTypeService.delete(currentName);
+	@Operation(summary = "Create a new card type")
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	public void post(@Valid @RequestBody PostCardTypeDTO dto) {
+	    String newName = dto.getName();
+	    if (cardTypeService.checkIfNameExists(newName))
+	        throw new NameAlreadyExistsException(CardTag.class, newName);
+	    cardTypeService.post(dto);
 	}
 
-	@PatchMapping("/removeParameter")
+	@PatchMapping("/{name}/removeParameter")
 	@ResponseStatus(HttpStatus.OK)
-	public void removeParameter(@Valid @RequestBody AddRemoveCardTypeParameterDTO dto) {
+	public void removeParameter(
+			@NotBlank(message = CARD_TYPE_NOT_BLANK)
+			@PathVariable String name,
+			@Valid @RequestBody AddRemoveCardTypeParameterDTO dto) {
 		String cardTypeName = dto.getCardTypeName();
 		if (cardTypeService.getParameterCount(cardTypeName) <= 2) // Should never be less than 2
 			throw new InsufficientParameterNumberException();
@@ -106,30 +117,38 @@ public class CardTypeController {
 		cardTypeService.removeParameter(cardTypeName, parameterName);
 	}
 
-	@PatchMapping("/rename")
+	@PatchMapping("/{name}/rename")
 	@ResponseStatus(HttpStatus.OK)
-	public void rename(@Valid @RequestBody RenameDTO names) {
-		String currentName = names.getCurrentName();
-		String newName = names.getNewName();
-		if (currentName.equals("default"))
+	public void rename(
+			@NotBlank(message = CARD_TYPE_NOT_BLANK)
+			@PathVariable String name,
+			@NotBlank(message = "New " + CARD_TYPE_NOT_BLANK)
+			@Valid @RequestParam String newName) {
+		if (name.equals("default"))
 			throw new CannotRenameDefaultException(CardType.class);
-		if (cardTypeService.checkIfNameExists(currentName))
-			throw new NameAlreadyExistsException(CardType.class, currentName);
-		cardTypeService.rename(currentName, newName);
+		if (cardTypeService.checkIfNameExists(name))
+			throw new NameAlreadyExistsException(CardType.class, name);
+		cardTypeService.rename(name, newName);
 	}
 
-	@PatchMapping("/renameParameter")
+	@PatchMapping("/{name}/renameParameter")
 	@ResponseStatus(HttpStatus.OK)
-	public void renameParameter(@Valid @RequestBody RenameCardTypeParameterDTO dto) {
-		cardTypeService.renameParameter(dto.getCardTypeName(),
+	public void renameParameter(
+			@NotBlank(message = CARD_TYPE_NOT_BLANK)
+			@PathVariable String name,
+			@Valid @RequestBody RenameCardTypeParameterDTO dto) {
+		cardTypeService.renameParameter(name,
 			dto.getParameterName(), dto.getNewParameterName());
 	}
 	
-	@PatchMapping("/updateFormat")
+	@PatchMapping("/{name}/updateFormat")
 	@ResponseStatus(HttpStatus.OK)
-	public void updateFormat(@Valid @RequestBody CardTypeFormatDTO dto) {
+	public void updateFormat(
+			@NotBlank(message = CARD_TYPE_NOT_BLANK)
+			@PathVariable String name, 
+			@Valid @RequestBody CardTypeFormatDTO dto) {
 		cardTypeService.updateFormat(
-			dto.getName(), dto.getBack(),
+			name, dto.getBack(),
 			dto.getFront(), dto.getFormatting());
 	}
 }

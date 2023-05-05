@@ -14,7 +14,7 @@ import com.model.CardStatus;
 import com.model.Deck;
 import com.model.DeckSettings;
 import com.model.NewCardOrder;
-import com.outputdto.CardDTO;
+import com.outputdto.CardPlayDTO;
 import com.outputdto.CardQueueDTO;
 import com.outputdto.DeckReviewDTO;
 import com.repository.CardRepository;
@@ -31,7 +31,7 @@ public class CardQueueService {
 	@Autowired
 	private CardRepository cardRepository;
 	@Autowired
-	private CardService cardService;
+	private DeckService deckService;
 	
 	//TODO check cases for subdecks
 	public CardQueueDTO getCardQueue(String deckName) {
@@ -39,18 +39,18 @@ public class CardQueueService {
 		DeckSettings deckSettings = deckSettingsRepository.findById(
 				deck.getDeckSettingsId())
 				.orElseThrow(IllegalDeckStateException::new);
-		List<CardDTO> laspsedCards = cardService.convertToCardDTOList(getLapsedCards(deck));
+		List<CardPlayDTO> laspsedCards = deckService.convertToCardDTOList(getLapsedCards(deck));
 		int newCardLimit = 
 				deckSettings.getNewCardSettings().getMaxNewCardsPerDay() -
 				deck.getNewCardsReviewed();
-		List<CardDTO> newCards = cardService.convertToCardDTOList(
+		List<CardPlayDTO> newCards = deckService.convertToCardDTOList(
 				getNewCards(deck, 
 						deckSettings.getNewCardSettings().getNewCardOrder(),
 						newCardLimit));
 		int learnedCardLimit =
 				deckSettings.getReviewSettings().getMaxReviewsPerDay() -
 				deck.getLearnedCardsReviewed();
-		List<CardDTO> learnedCards = cardService.convertToCardDTOList(
+		List<CardPlayDTO> learnedCards = deckService.convertToCardDTOList(
 				getDueCards(deck, learnedCardLimit));
 		return new CardQueueDTO(newCards, learnedCards, laspsedCards,
 				deckSettings.getReviewSettings().getReviewOrder());
