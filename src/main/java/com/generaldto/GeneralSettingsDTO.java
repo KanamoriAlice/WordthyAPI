@@ -19,5 +19,12 @@ public class GeneralSettingsDTO {
 	private boolean showAnswerTimer;
 	private boolean autoPlayAudio;
 	private boolean replayQuestion;
+	private boolean autoDisplayAnswer;
+	//Time until the answer is shown
+	@Positive(message = "The number should be greater than 0")
+	private int showAnswerTime;
+	//Time until next question is shown
+	@Positive(message = "The number should be greater than 0")
+	private int nextQuestionTime;
 	
 }

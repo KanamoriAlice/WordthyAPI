@@ -13,9 +13,14 @@ public class GeneralSettings {
 	private boolean showAnswerTimer;
 	private boolean autoPlayAudio;
 	private boolean replayQuestion;
+	private boolean autoDisplayAnswer;
+	//Time until the answer is shown
+	private int showAnswerTime;
+	//Time until next question is shown
+	private int nextQuestionTime;
 	
 	public GeneralSettings() {
-		this(60, false, false, false);
+		this(60, false, false, false, false, 60, 60);
 	}
 
 }

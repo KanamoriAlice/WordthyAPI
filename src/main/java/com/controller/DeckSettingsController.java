@@ -42,17 +42,6 @@ public class DeckSettingsController {
 	
 	@Autowired
 	DeckSettingsService deckSettingsService;
-	
-	@Operation(summary = "Add a new deck settings")
-	@PostMapping
-	@ResponseStatus(HttpStatus.CREATED)
-	public void post(
-	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-	        @PathVariable String name) {
-	    if (deckSettingsService.checkIfNameExists(name))
-	        throw new NameAlreadyExistsException(DeckSettings.class, name);
-	    deckSettingsService.post(name);
-	}
 
 	@Operation(summary = "Delete a deck settings by its name")
 	@DeleteMapping("/{name}")
@@ -115,6 +104,21 @@ public class DeckSettingsController {
 	    return deckSettingsService.getReviewSettings(name);
 	}
 	
+	@Operation(summary = "Rename a deck settings by its name")
+	@PatchMapping("/{name}")
+	@ResponseStatus(HttpStatus.OK)
+	public void patch(
+	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
+	        @PathVariable String name,
+	        @NotBlank(message = "New" + DECK_SETTINGS_NOT_BLANK)
+	        @RequestParam String newName) {
+	    if(name.equals("default"))
+	        throw new CannotRenameDefaultException(DeckSettings.class);
+	    if (!deckSettingsService.checkIfNameExists(name))
+	        throw new NameDoesNotExistException(DeckSettings.class, name);
+	    deckSettingsService.patch(name, newName);
+	}
+	
 	@Operation(summary = "Update lapse settings by deck settings name")
 	@PatchMapping("/{name}/lapseSettings")
 	@ResponseStatus(HttpStatus.OK)
@@ -154,20 +158,16 @@ public class DeckSettingsController {
 	        @Valid @RequestBody ReviewSettingsDTO dto) {
 	    deckSettingsService.patchReviewSettings(name, dto);
 	}
-
-	@Operation(summary = "Rename a deck settings by its name")
-	@PatchMapping("/{name}/rename")
-	@ResponseStatus(HttpStatus.OK)
-	public void rename(
+	
+	@Operation(summary = "Add a new deck settings")
+	@PostMapping()
+	@ResponseStatus(HttpStatus.CREATED)
+	public void post(
 	        @NotBlank(message = DECK_SETTINGS_NOT_BLANK)
-	        @PathVariable String name,
-	        @NotBlank(message = "New" + DECK_SETTINGS_NOT_BLANK)
-	        @RequestParam String newName) {
-	    if(name.equals("default"))
-	        throw new CannotRenameDefaultException(DeckSettings.class);
-	    if (!deckSettingsService.checkIfNameExists(name))
-	        throw new NameDoesNotExistException(DeckSettings.class, name);
-	    deckSettingsService.rename(name, newName);
+	        @RequestParam String name) {
+	    if (deckSettingsService.checkIfNameExists(name))
+	        throw new NameAlreadyExistsException(DeckSettings.class, name);
+	    deckSettingsService.post(name);
 	}
 
 }

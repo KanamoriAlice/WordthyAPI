@@ -21,8 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.inputdto.PostCardDTO;
-import com.inputdto.PatchCardDTO;
+import com.inputdto.PostPatchCardDTO;
 import com.model.CardAnswer;
 import com.model.CardStatus;
 import com.outputdto.GetCardDTO;
@@ -61,14 +60,14 @@ public class CardController {
 	public void patch(
 			@NotBlank(message = CARD_ID_NOT_BLANK)
 			@PathVariable String id,
-			@Valid @RequestBody PatchCardDTO dto) {
+			@Valid @RequestBody PostPatchCardDTO dto) {
 		cardService.patch(id, dto);
 	}
 	
 	@Operation(summary = "Add a new card")
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public void post(@Valid @RequestBody PostCardDTO dto) {
+	public void post(@Valid @RequestBody PostPatchCardDTO dto) {
 		cardService.post(dto);
 	}
 	

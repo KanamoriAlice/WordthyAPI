@@ -50,16 +50,16 @@ public class CardTagController {
 	    cardTagService.delete(name);
 	}
 
-	@Operation(summary = "Get all card tag names")
-	@GetMapping("/allNames")
+	@Operation(summary = "Get all card tags")
+	@GetMapping("/all")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<String> getAllNames() {
-	    return cardTagService.getAllNames();
+	public List<String> getAll() {
+	    return cardTagService.getAll();
 	}
 	
 	@Operation(summary = "Rename a card tag by its name")
-	@PatchMapping("/{name}/rename")
+	@PatchMapping("/{name}")
 	@ResponseStatus(HttpStatus.OK)
 	public void patch(
 	        @NotBlank(message = CARD_TAG_NOT_BLANK)
@@ -68,7 +68,7 @@ public class CardTagController {
 	        @RequestParam String newName) {
 	    if(name.equals("default"))
 	        throw new CannotRenameDefaultException(CardTag.class);
-	    if (cardTagService.checkIfNameExists(name))
+	    if (cardTagService.checkIfNameExists(newName))
 	        throw new NameAlreadyExistsException(CardTag.class, name);
 	    cardTagService.patch(name, newName);
 	}
@@ -79,7 +79,7 @@ public class CardTagController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public void post(
 	        @NotBlank(message = CARD_TAG_NOT_BLANK)
-	        @PathVariable String name) {
+	        @RequestParam String name) {
 	    if (cardTagService.checkIfNameExists(name))
 	        throw new NameAlreadyExistsException(CardTag.class, name);
 	    cardTagService.post(name);

@@ -12,31 +12,24 @@ public class ReviewSettings {
 	/*TODO: think of a better way to display showAnswerTime and
 	 *		nextQuestionTime (general or review settings)*/
 	
+	private ReviewOrder reviewOrder;
 	private int maxReviewsPerDay;
 	private int intervalModifier; //In %
-	private boolean autoDisplayAnswer;
-	//Time until the answer is shown
-	private int showAnswerTime;
-	//Time until next question is shown
-	private int nextQuestionTime;
 	private Period maxInterval;
-	private ReviewOrder reviewOrder;
+	
 	
 	public ReviewSettings() {
-		this(250, 191, false, 60, 60, Period.ofDays(365),
-				ReviewOrder.NEW_CARDS_AFTER_REVIEWS);
+		this(ReviewOrder.NEW_CARDS_AFTER_REVIEWS, 250, 191, Period.ofDays(365));
 	}
 
-	public ReviewSettings(int maxReviewsPerDay, int intervalModifier, boolean autoDisplayAnswer, int showAnswerTime,
-			int nextQuestionTime, int maxInterval, ReviewOrder reviewOrder) {
+	public ReviewSettings(ReviewOrder reviewOrder, int maxReviewsPerDay, int intervalModifier, boolean autoDisplayAnswer, int showAnswerTime,
+			int nextQuestionTime, int maxInterval) {
 		super();
+		this.reviewOrder = reviewOrder;
 		this.maxReviewsPerDay = maxReviewsPerDay;
 		this.intervalModifier = intervalModifier;
-		this.autoDisplayAnswer = autoDisplayAnswer;
-		this.showAnswerTime = showAnswerTime;
-		this.nextQuestionTime = nextQuestionTime;
 		this.maxInterval = Period.ofDays(maxInterval);
-		this.reviewOrder = reviewOrder;
+		
 	}
 	
 	

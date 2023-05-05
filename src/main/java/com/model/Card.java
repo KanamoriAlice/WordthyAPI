@@ -1,6 +1,5 @@
 package com.model;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,8 +29,8 @@ public class Card {
 	private List<String> fields;
 	
 	//Constructor used to create a new record in the database
-	public Card(String cardTypeId, String deckId, int steps, List<String> fields) {
-		this(null, cardTypeId, deckId, new HashSet<>(),
+	public Card(String cardTypeId, String deckId, int steps, List<String> fields, Set<String> tags) {
+		this(null, cardTypeId, deckId, tags,
 				new CardScheduleSettings(steps), new CardStats(),
 				CardStatus.NEW, fields);
 	}

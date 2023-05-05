@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.exception.CardDoesNotExistException;
 import com.exception.IllegalCardStateException;
-import com.inputdto.PostCardDTO;
-import com.inputdto.PatchCardDTO;
+import com.inputdto.PostPatchCardDTO;
 import com.model.Card;
 import com.model.CardAnswer;
 import com.model.CardReview;
@@ -49,13 +48,16 @@ public class CardService {
 
 	// PUBLIC METHODS
 
-	public void post(PostCardDTO registrationCard) {
-		Deck deck = deckRepository.findByName(registrationCard.getDeckName());
-		CardType cardType = cardTypeRepository.findByName(registrationCard.getCardTypeName());
+	public void post(PostPatchCardDTO dto) {
+		Deck deck = deckRepository.findByName(dto.getDeckName());
+		CardType cardType = cardTypeRepository.findByName(dto.getCardTypeName());
+		Set<String> cardTags = dto.getCardTags().stream()
+				.map(tag -> cardTagRepository.findByName(tag).getId())
+				.collect(Collectors.toSet());
 		Optional<DeckSettings> deckSettingsOpt = deckSettingsRepository.findById(deck.getDeckSettingsId());
 		if (deckSettingsOpt.isPresent()) {
 			Card card = new Card(cardType.getId(), deck.getId(),1,
-					registrationCard.getFields());
+					dto.getFields(), cardTags);
 			cardRepository.save(card);
 		}
 	}	
@@ -200,20 +202,19 @@ public class CardService {
 		cardRepository.save(card);
 	}
 
-	public void patch(String id, PatchCardDTO dto) {
+	public void patch(String id, PostPatchCardDTO dto) {
 		Card card = cardRepository.findById(id)
 				.orElseThrow(CardDoesNotExistException::new);
-		Deck deck = deckRepository.findByName(dto.getDeck());
+		Deck deck = deckRepository.findByName(dto.getDeckName());
 		card.setDeckId(deck.getId());
-		CardType cardType = cardTypeRepository.findByName(dto.getCardType());
-		if(!dto.getCardType().equals(cardType.getName())) {
+		CardType cardType = cardTypeRepository.findByName(dto.getCardTypeName());
+		if(!dto.getCardTypeName().equals(cardType.getName()))
 			card.setCardTypeId(cardType.getId());
-			card.setFields(dto.getFields());
-		}
-		card.setCardTagsId(dto.getTags().stream()
+		card.setFields(dto.getFields());
+		card.setCardTagsId(dto.getCardTags().stream()
 				.map(cardTagRepository::findByName)
 				.collect(Collectors.toSet()).stream()
-				.map(CardTag::getName).collect(Collectors.toSet()));
+				.map(CardTag::getId).collect(Collectors.toSet()));
 		cardRepository.save(card);
 	}
 	

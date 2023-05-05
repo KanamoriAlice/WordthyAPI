@@ -104,7 +104,7 @@ public class DeckSettingsService {
 		return mapper.map(deckSettings.getReviewSettings(), ReviewSettingsDTO.class);
 	}
 	
-	public void rename(String currentName, String newName) throws CannotRenameDefaultException {
+	public void patch(String currentName, String newName) throws CannotRenameDefaultException {
 		if(!currentName.equals(newName)) {
 			DeckSettings deckSettings = deckSettingsRepository.findByName(currentName);
 			deckSettings.setName(newName);

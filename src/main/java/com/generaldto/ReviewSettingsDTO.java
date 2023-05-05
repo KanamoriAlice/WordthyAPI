@@ -17,20 +17,14 @@ public class ReviewSettingsDTO {
 	
 	/*TODO: think of a better way to display showAnswerTime and
 	 *		nextQuestionTime (general or review settings)*/
+	@NotNull(message = "Order cannot be null")
+	private ReviewOrder reviewOrder;
 	@Positive(message = "The number should be greater than 0")
 	private int maxReviewsPerDay;
 	@Positive(message = "The number should be greater than 0")
 	private int intervalModifier; //In %
-	private boolean autoDisplayAnswer;
-	//Time until the answer is shown
-	@Positive(message = "The number should be greater than 0")
-	private int showAnswerTime;
-	//Time until next question is shown
-	@Positive(message = "The number should be greater than 0")
-	private int nextQuestionTime;
 	@Positive(message = "The number should be greater than 0")
 	private int maxInterval;
-	@NotNull(message = "Order cannot be null")
-	private ReviewOrder reviewOrder;
+	
 	
 }

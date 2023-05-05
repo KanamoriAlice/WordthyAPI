@@ -36,7 +36,7 @@ public class CardTagService {
 		cardTagRepository.delete(cardTag);
 	}
 	
-	public List<String> getAllNames() {
+	public List<String> getAll() {
 		return cardTagRepository.findAll().stream()
 				.map(CardTag::getName)
 				.collect(Collectors.toList());
