@@ -13,6 +13,7 @@ import com.model.CardStatus;
 
 public interface CardRepository extends MongoRepository<Card, String> {
 	
+	
 	public void deleteAllByDeckId(String deckId);
 	public void deleteAllByCardTypeId(String cardTypeId);
 	public List<Card> findAllByCardTypeId(String cardTypeId);

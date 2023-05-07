@@ -20,21 +20,21 @@ public class CardType {
 	private String id;
 
 	private String back;
-	private String formatting;
+	private String format;
 	private String front;
 	private String name;
 	
 	private List<String> fieldNames;
 
 	//Constructor used to create a new record in the database
-	public CardType(String back, String formatting, String front, String name, List<String> fieldNames) {
-		this(null, back, formatting, front, name, fieldNames);
+	public CardType(String back, String format, String front, String name, List<String> fieldNames) {
+		this(null, back, format, front, name, fieldNames);
 	}
 	
 	public CardType(String name, List<String> fields) {
 		this("{{FrontSide}}" +
 				fields.stream().filter(x -> !x.equals(fields.get(0))).reduce("",(a,b) -> (a + "<br>" + "{{" + b + "}}")),
-				"", "{{" + fields.get(0) + "}}",
+				"font-size: x-large;", "{{" + fields.get(0) + "}}",
 				name, fields);
 	}
 

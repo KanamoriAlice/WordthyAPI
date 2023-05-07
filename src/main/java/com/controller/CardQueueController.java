@@ -41,14 +41,14 @@ public class CardQueueController {
 	}
 	
 	@Operation(summary = "Get a DeckReview of all decks")
-	@GetMapping("/allDeckReviews")
+	@GetMapping("/allReviews")
 	@ResponseStatus(HttpStatus.OK)
 	public List<DeckReviewDTO> getAllDeckReviews() {
 		return cardQueueService.getAllDeckReviews();
 	}
 	
 	@Operation(summary = "Get a DeckReview by deck name")
-	@GetMapping("/{name}/deckReview")
+	@GetMapping("/{name}/review")
 	@ResponseStatus(HttpStatus.OK)
 	public DeckReviewDTO getDeckReview(
 			@Parameter(description = "name of the deck of the DeckReview to be searched")

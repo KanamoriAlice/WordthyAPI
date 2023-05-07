@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.exception.DuplicatedCardTypeParametersException;
 import com.exception.NameAlreadyExistsException;
+import com.exception.ParameterNameAlreadyExists;
 import com.outputdto.ErrorDTO;
 
 import jakarta.validation.ConstraintViolationException;
@@ -32,7 +34,7 @@ public class ExceptionHandlerController {
 		return ResponseEntity.badRequest().body(errors);
 	}
 	
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	@ExceptionHandler(NameAlreadyExistsException.class)
 	public ResponseEntity<ErrorDTO> handleNameAlreadyExistsException() {
 		return ResponseEntity.internalServerError().body(new ErrorDTO("name", "Name already exists"));
@@ -49,6 +51,22 @@ public class ExceptionHandlerController {
 							error.getDefaultMessage()))
 				);
 		return ResponseEntity.badRequest().body(errors);
+	}
+	
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ExceptionHandler(DuplicatedCardTypeParametersException.class)
+	public ResponseEntity<ErrorDTO> handleCardTypeParameterIsBlankException(
+			DuplicatedCardTypeParametersException exception) {
+		return ResponseEntity.internalServerError().body(
+				new ErrorDTO("fields", exception.getMessage()));
+	}
+	
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	@ExceptionHandler(ParameterNameAlreadyExists.class)
+	public ResponseEntity<ErrorDTO> handleParameterNameAlreadyExists(
+			ParameterNameAlreadyExists exception) {
+		return ResponseEntity.internalServerError().body(
+				new ErrorDTO("fields", exception.getMessage()));
 	}
 	
 //	@ResponseStatus(HttpStatus.BAD_REQUEST)

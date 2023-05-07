@@ -28,7 +28,7 @@ import com.exception.NameDoesNotExistException;
 import com.inputdto.PatchDeckDTO;
 import com.model.Deck;
 import com.outputdto.CardPlayDTO;
-import com.outputdto.DeckDTO;
+import com.outputdto.GetDeckDTO;
 import com.service.DeckService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +57,7 @@ public class DeckController {
 	@Operation(summary = "Get all deck names")
 	@GetMapping("/allNames")
 	@ResponseStatus(HttpStatus.OK)
-	public List<DeckDTO> getAllNames() {
+	public List<GetDeckDTO> getAllNames() {
 	    return deckService.getAllNames();
 	}
 
@@ -126,7 +126,7 @@ public class DeckController {
 	
 //	@PatchMapping("/setDeckSettings")
 //	@ResponseStatus(HttpStatus.OK)
-//	public void setDeckSettings(@Valid @RequestBody DeckDTO deckDTO) {
+//	public void setDeckSettings(@Valid @RequestBody GetDeckDTO deckDTO) {
 //		deckService.setDeckSettings(deckDTO.getName(), deckDTO.getDeckSettingsName());
 //	}
 	

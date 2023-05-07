@@ -72,7 +72,7 @@ public class CardController {
 	}
 	
 	@Operation(summary = "Schedule a card")
-	@PatchMapping("/schedule")
+	@PatchMapping("/{id}/schedule")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public CardStatus schedule(

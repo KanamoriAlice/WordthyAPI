@@ -8,10 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.exception.ParameterNameAlreadyExists;
+import com.inputdto.PatchCardTypeDTO;
 import com.inputdto.PostCardTypeDTO;
 import com.model.Card;
 import com.model.CardType;
 import com.outputdto.CardTypeFormatDTO;
+import com.outputdto.CardTypeReviewDTO;
 import com.repository.CardRepository;
 import com.repository.CardTypeRepository;
 
@@ -86,6 +89,9 @@ public class CardTypeService {
 	public void renameParameter(String cardTypeName, String parameterName, String newName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		List<String> parameters = cardType.getFieldNames();
+		for(String parameter : parameters)
+			if(parameter.equals(newName))
+				throw new ParameterNameAlreadyExists();
 		int paramenterIndex = parameters.indexOf(parameterName);
 		parameters.remove(paramenterIndex);
 		parameters.add(paramenterIndex, newName);
@@ -93,7 +99,7 @@ public class CardTypeService {
 	}
 	
 	@Transactional
-	public void removeParameter(String cardTypeName, String parameterName) {
+	public void deleteParameter(String cardTypeName, String parameterName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		List<Card> cards = cardRepository.findAllByCardTypeId(cardType.getId());
 		List<String> fieldNames = cardType.getFieldNames();
@@ -108,7 +114,32 @@ public class CardTypeService {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		cardType.setBack(back);
 		cardType.setFront(front);
-		cardType.setFormatting(formatting);
+		cardType.setFormat(formatting);
+		cardTypeRepository.save(cardType);
+	}
+
+	public CardTypeReviewDTO getCardTypeReview(String name) {
+		CardType cardType = cardTypeRepository.findByName(name);
+		return new CardTypeReviewDTO(cardType.getName(), cardType.getBack(),
+				cardType.getFront(), cardType.getFormat(), cardType.getFieldNames());
+	}
+
+	public List<CardTypeReviewDTO> getAllCardTypeReview() {
+		List<CardType> cardTypes = cardTypeRepository.findAll();
+		return cardTypes.stream()
+				.map(cardType -> new CardTypeReviewDTO(cardType.getName(), cardType.getBack(),
+						cardType.getFront(), cardType.getFormat(),
+						cardType.getFieldNames()))
+				.collect(Collectors.toList());
+	}
+
+	public void patch(String name, PatchCardTypeDTO dto) {
+		CardType cardType = cardTypeRepository.findByName(name);
+		if(!dto.getNewName().equals(name))
+			cardType.setName(dto.getNewName());
+		cardType.setBack(dto.getBack());
+		cardType.setFront(dto.getFront());
+		cardType.setFormat(dto.getFormat());
 		cardTypeRepository.save(cardType);
 	}
 

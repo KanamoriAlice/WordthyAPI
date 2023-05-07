@@ -1,8 +1,8 @@
 package com.inputdto;
 
+import static com.configuration.TemporaryStrings.CARD_TYPE_NOT_BLANK;
 
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-//It is used to add or remove tags from a card
-public class AddRemoveTagDTO {
+public class PatchCardTypeDTO {
 	
-	private String cardId;
-	@NotBlank(message = "Tag name cannot be empty nor null")
-	private String tagName;
-	
+	@NotBlank(message = CARD_TYPE_NOT_BLANK)
+	private String newName;
+	private String back;
+	private String front;
+	private String format;
 
 }

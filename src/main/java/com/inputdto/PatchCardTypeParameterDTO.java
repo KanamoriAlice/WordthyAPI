@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 //It is used to add or remove parameters from a card type
-public class AddRemoveCardTypeParameterDTO {
+public class PatchCardTypeParameterDTO {
 	
 	@NotBlank(message = "Name cannot be empty nor null")
 	private String cardTypeName;

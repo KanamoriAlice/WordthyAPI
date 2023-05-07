@@ -20,7 +20,7 @@ import com.model.CardType;
 import com.model.Deck;
 import com.model.DeckSettings;
 import com.outputdto.CardPlayDTO;
-import com.outputdto.DeckDTO;
+import com.outputdto.GetDeckDTO;
 import com.repository.CardRepository;
 import com.repository.CardTypeRepository;
 import com.repository.DeckRepository;
@@ -52,7 +52,7 @@ public class DeckService {
 		deckRepository.delete(deck);
 	}
 	
-	public List<DeckDTO> getAllNames() {
+	public List<GetDeckDTO> getAllNames() {
 		List<Deck> decks = deckRepository.findAll();
 		Map<String, String> parentDecks = new HashMap<>();
 		decks.stream().forEach(deck ->
@@ -61,8 +61,8 @@ public class DeckService {
 				.map(deck -> {
 					String parentDeck = parentDecks.get(deck.getParentDeckId());
 					if(parentDeck != null)
-						return new DeckDTO(parentDeck, deck.getName());
-					return new DeckDTO("", deck.getName());
+						return new GetDeckDTO(parentDeck, deck.getName());
+					return new GetDeckDTO("", deck.getName());
 				}).collect(Collectors.toList());
 	}
 	
@@ -119,8 +119,8 @@ public class DeckService {
 	}
 	
 	//PRIVATE METHODS
-	//Converts an DeckDTO object to a Deck
-//	private Deck mapDTOToDeck(DeckDTO deckDTO) {
+	//Converts an GetDeckDTO object to a Deck
+//	private Deck mapDTOToDeck(GetDeckDTO deckDTO) {
 //		return mapper.map(deckDTO, Deck.class);
 //	}
 	
@@ -130,14 +130,15 @@ public class DeckService {
 			return dto;
 		CardType cardType = cardTypeRepository.findById(cards.get(0).getCardTypeId())
 				.orElseThrow(IllegalCardStateException::new);
-		for (Card card : cards)
+		for (Card card : cards) {
 			if (!card.getCardTypeId().equals(cardType.getId()))
 				cardType = cardTypeRepository.findById(card.getCardTypeId())
 						.orElseThrow(IllegalCardStateException::new);
-			else
-				dto.add(new CardPlayDTO(card.getId(), cardType.getBack(),
-						cardType.getFormatting(), cardType.getFront(),
-						card.getFields(), cardType.getFieldNames()));
+			dto.add(new CardPlayDTO(card.getId(), cardType.getBack(),
+					cardType.getFormat(), cardType.getFront(),
+					card.getFields(), cardType.getFieldNames()));
+		}
+			
 		return dto;
 	}
 	
