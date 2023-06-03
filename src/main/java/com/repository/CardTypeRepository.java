@@ -7,7 +7,7 @@ import com.model.CardType;
 
 @Repository
 public interface CardTypeRepository extends MongoRepository<CardType, String> {
-	
+
 	CardType findByName(String name);
 
 }

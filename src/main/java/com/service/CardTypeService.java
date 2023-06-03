@@ -20,15 +20,15 @@ import com.repository.CardTypeRepository;
 
 @Service
 public class CardTypeService {
-	
+
 	@Autowired
 	private CardRepository cardRepository;
 	@Autowired
 	private CardTypeRepository cardTypeRepository;
 	@Autowired
 	private ModelMapper mapper;
-	
-	//PUBLIC METHODS
+
+	// PUBLIC METHODS
 	public void addParameter(String cardTypeName, String paramaterName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		List<Card> cards = cardRepository.findAllByCardTypeId(cardType.getId());
@@ -37,67 +37,67 @@ public class CardTypeService {
 		cardRepository.saveAll(cards);
 		cardTypeRepository.save(cardType);
 	}
-	
+
 	public boolean checkIfNameExists(String name) {
 		return cardTypeRepository.findByName(name) != null;
 	}
-	
+
 	public int getParameterCount(String cardTypeName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		return cardType.getFieldNames().size();
 	}
-	
+
 	public boolean checkIfParameterNameExists(String cardTypeName, String name) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		return cardType.getFieldNames().contains(name);
 	}
-	
+
 	public void post(PostCardTypeDTO dto) {
 		CardType cardType = new CardType(dto.getName(), dto.getFields());
 		cardTypeRepository.save(cardType);
 	}
-	
+
 	@Transactional
 	public void delete(String name) {
 		CardType cardType = cardTypeRepository.findByName(name);
 		cardRepository.deleteAllByCardTypeId(cardType.getId());
 		cardTypeRepository.delete(cardType);
 	}
-	
+
 	public List<String> getFields(String name) {
 		CardType cardType = cardTypeRepository.findByName(name);
 		return cardType.getFieldNames();
 	}
-	
+
 	public List<String> getAllNames() {
 		return cardTypeRepository.findAll().stream()
 				.map(CardType::getName)
 				.collect(Collectors.toList());
 	}
-	
+
 	public CardTypeFormatDTO getFormat(String name) {
 		CardType cardType = cardTypeRepository.findByName(name);
 		return mapper.map(cardType, CardTypeFormatDTO.class);
 	}
-	
+
 	public void rename(String cardTypeName, String newName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		cardType.setName(newName);
 		cardTypeRepository.save(cardType);
 	}
-	
+
 	public void renameParameter(String cardTypeName, String parameterName, String newName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		List<String> parameters = cardType.getFieldNames();
-		for(String parameter : parameters)
-			if(parameter.equals(newName))
+		for (String parameter : parameters)
+			if (parameter.equals(newName))
 				throw new ParameterNameAlreadyExists();
 		int paramenterIndex = parameters.indexOf(parameterName);
 		parameters.remove(paramenterIndex);
 		parameters.add(paramenterIndex, newName);
 		cardTypeRepository.save(cardType);
 	}
-	
+
 	@Transactional
 	public void deleteParameter(String cardTypeName, String parameterName) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
@@ -109,7 +109,7 @@ public class CardTypeService {
 		cardRepository.saveAll(cards);
 		cardTypeRepository.save(cardType);
 	}
-	
+
 	public void updateFormat(String cardTypeName, String back, String front, String formatting) {
 		CardType cardType = cardTypeRepository.findByName(cardTypeName);
 		cardType.setBack(back);
@@ -135,7 +135,7 @@ public class CardTypeService {
 
 	public void patch(String name, PatchCardTypeDTO dto) {
 		CardType cardType = cardTypeRepository.findByName(name);
-		if(!dto.getNewName().equals(name))
+		if (!dto.getNewName().equals(name))
 			cardType.setName(dto.getNewName());
 		cardType.setBack(dto.getBack());
 		cardType.setFront(dto.getFront());
