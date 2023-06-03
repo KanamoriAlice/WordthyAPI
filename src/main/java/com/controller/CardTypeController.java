@@ -140,18 +140,17 @@ public class CardTypeController {
 	    cardTypeService.post(dto);
 	}
 
-	@Operation(summary = "Delete parameter to card type by its name")
-	@PatchMapping("/{name}/removeParameter")
+	@Operation(summary = "Delete parameter of a card type by its name")
+	@DeleteMapping("/{name}/parameter")
 	@ResponseStatus(HttpStatus.OK)
 	public void deleteParameter(
 			@NotBlank(message = CARD_TYPE_NOT_BLANK)
 			@PathVariable String name,
-			@Valid @RequestBody PatchCardTypeParameterDTO dto) {
-		String cardTypeName = dto.getCardTypeName();
-		if (cardTypeService.getParameterCount(cardTypeName) <= 2) // Should never be less than 2
+			@NotBlank(message = CARD_TYPE_NOT_BLANK)
+			@RequestParam String parameterName) {
+		if (cardTypeService.getParameterCount(name) <= 2) // Should never be less than 2
 			throw new InsufficientParameterNumberException();
-		String parameterName = dto.getParameterName();
-		cardTypeService.deleteParameter(cardTypeName, parameterName);
+		cardTypeService.deleteParameter(name, parameterName);
 	}
 
 	@Operation(summary = "Rename parameter of a card type by its name")
