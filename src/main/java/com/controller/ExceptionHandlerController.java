@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.exception.DuplicatedCardTypeParametersException;
 import com.exception.NameAlreadyExistsException;
-import com.exception.ParameterNameAlreadyExists;
+import com.exception.ParameterNameAlreadyExistsException;
 import com.outputdto.ErrorDTO;
 
 import jakarta.validation.ConstraintViolationException;
@@ -62,9 +62,9 @@ public class ExceptionHandlerController {
 	}
 	
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	@ExceptionHandler(ParameterNameAlreadyExists.class)
+	@ExceptionHandler(ParameterNameAlreadyExistsException.class)
 	public ResponseEntity<ErrorDTO> handleParameterNameAlreadyExists(
-			ParameterNameAlreadyExists exception) {
+			ParameterNameAlreadyExistsException exception) {
 		return ResponseEntity.internalServerError().body(
 				new ErrorDTO("fields", exception.getMessage()));
 	}

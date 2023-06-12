@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exception.ParameterNameAlreadyExists;
+import com.exception.ParameterNameAlreadyExistsException;
 import com.inputdto.PatchCardTypeDTO;
 import com.inputdto.PostCardTypeDTO;
 import com.model.Card;
@@ -64,7 +64,7 @@ public class CardTypeService {
 		cardTypeRepository.delete(cardType);
 	}
 
-	public List<String> getFields(String name) {
+	public List<String> getParameters(String name) {
 		CardType cardType = cardTypeRepository.findByName(name);
 		return cardType.getFieldNames();
 	}
@@ -91,7 +91,7 @@ public class CardTypeService {
 		List<String> parameters = cardType.getFieldNames();
 		for (String parameter : parameters)
 			if (parameter.equals(newName))
-				throw new ParameterNameAlreadyExists();
+				throw new ParameterNameAlreadyExistsException();
 		int paramenterIndex = parameters.indexOf(parameterName);
 		parameters.remove(paramenterIndex);
 		parameters.add(paramenterIndex, newName);

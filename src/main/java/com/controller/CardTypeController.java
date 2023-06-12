@@ -1,6 +1,7 @@
 package com.controller;
 
 import static com.configuration.TemporaryStrings.CARD_TYPE_NOT_BLANK;
+import static com.configuration.TemporaryStrings.CARD_TYPE_PARAMETER_NOT_BLANK;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +31,7 @@ import com.exception.DuplicatedCardTypeParametersException;
 import com.exception.InsufficientParameterNumberException;
 import com.exception.NameAlreadyExistsException;
 import com.exception.NameDoesNotExistException;
-import com.exception.ParamaterAlreadyExistsException;
+import com.exception.ParameterNameAlreadyExistsException;
 import com.inputdto.PostCardTypeDTO;
 import com.inputdto.PatchCardTypeDTO;
 import com.inputdto.PatchCardTypeParameterDTO;
@@ -52,12 +53,12 @@ public class CardTypeController {
 	@Operation(summary = "Add a parameter to card type by its name")
 	@PatchMapping("/{name}/addParameter")
 	@ResponseStatus(HttpStatus.OK)
-	public void addParameter(@Valid @RequestBody PatchCardTypeParameterDTO dto) {
-		String cardTypeName = dto.getCardTypeName();
-		String parameterName = dto.getParameterName();
-		if (cardTypeService.checkIfParameterNameExists(cardTypeName, parameterName))
-			throw new ParamaterAlreadyExistsException();
-		cardTypeService.addParameter(cardTypeName, parameterName);
+	public void addParameter(
+			@NotBlank(message = CARD_TYPE_NOT_BLANK) @PathVariable String name,
+			@NotBlank(message = CARD_TYPE_PARAMETER_NOT_BLANK) @RequestParam("parameterName") String parameterName) {
+		if (cardTypeService.checkIfParameterNameExists(name, parameterName))
+			throw new ParameterNameAlreadyExistsException();
+		cardTypeService.addParameter(name, parameterName);
 	}
 
 	@Operation(summary = "Delete a card type by its name")
@@ -89,13 +90,13 @@ public class CardTypeController {
 		return cardTypeService.getCardTypeReview(name);
 	}
 
-	@Operation(summary = "Get all fields of a card type by its name")
-	@GetMapping("/{name}/fields")
+	@Operation(summary = "Get all parameters of a card type by its name")
+	@GetMapping("/{name}/allParameters")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public List<String> getFields(
+	public List<String> getParameters(
 			@NotBlank(message = CARD_TYPE_NOT_BLANK) @PathVariable String name) {
-		return cardTypeService.getFields(name);
+		return cardTypeService.getParameters(name);
 	}
 
 	@Operation(summary = "Get all card type names")
@@ -143,7 +144,7 @@ public class CardTypeController {
 			@NotBlank(message = CARD_TYPE_NOT_BLANK)
 			@PathVariable String name,
 			@NotBlank(message = CARD_TYPE_NOT_BLANK)
-			@RequestParam String parameterName) {
+			@RequestParam("parameterName") String parameterName) {
 		if (cardTypeService.getParameterCount(name) <= 2) // Should never be less than 2
 			throw new InsufficientParameterNumberException();
 		cardTypeService.deleteParameter(name, parameterName);
@@ -154,8 +155,10 @@ public class CardTypeController {
 	@ResponseStatus(HttpStatus.OK)
 	public void renameParameter(
 			@NotBlank(message = CARD_TYPE_NOT_BLANK) @PathVariable String name,
-			@NotBlank(message = CARD_TYPE_NOT_BLANK) @RequestParam String parameterName,
-			@NotBlank(message = CARD_TYPE_NOT_BLANK) @RequestParam String newParameterName) {
+			@NotBlank(message = CARD_TYPE_PARAMETER_NOT_BLANK) @RequestParam("parameterName") String parameterName,
+			@NotBlank(message = CARD_TYPE_PARAMETER_NOT_BLANK) @RequestParam("newParameterName") String newParameterName) {
+		if (cardTypeService.checkIfParameterNameExists(name, newParameterName))
+			throw new ParameterNameAlreadyExistsException();
 		cardTypeService.renameParameter(name,
 				parameterName, newParameterName);
 	}

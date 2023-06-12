@@ -57,6 +57,7 @@ public class CardQueueService {
 	}
 	//TODO refactor this method
 	public List<DeckReviewDTO> getAllDeckReviews() {
+		deckService.resetAllDeckCounters();
 		List<Deck> decks = deckRepository.findAll();
 		List<DeckReviewDTO> deckReviews = new ArrayList<>();
 		decks.forEach(deck -> {

@@ -1,10 +1,10 @@
 package com.exception;
 
-public class ParameterNameAlreadyExists extends RuntimeException {
+public class ParameterNameAlreadyExistsException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 	
-	public ParameterNameAlreadyExists() {
+	public ParameterNameAlreadyExistsException() {
 		super("Parameter name already exists");
 	}
 
