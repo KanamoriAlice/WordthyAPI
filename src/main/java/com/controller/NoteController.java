@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.exception.NameAlreadyExistsException;
+import com.inputdto.NoteContentDTO;
 import com.model.Note;
 import com.outputdto.NoteDTO;
 import com.service.NoteService;
@@ -72,8 +74,8 @@ public class NoteController {
 	@ResponseStatus(HttpStatus.OK)
 	public void updateContent(
 			@NotBlank(message = NOTE_NOT_BLANK) @PathVariable String name,
-			@RequestParam String content) {
-		noteService.updateContent(name, content);
+			@RequestBody NoteContentDTO content) {
+		noteService.updateContent(name, content.getContent());
 	}
 
 	@Operation(summary = "Get a note by its name")

@@ -34,7 +34,6 @@ import com.exception.NameDoesNotExistException;
 import com.exception.ParameterNameAlreadyExistsException;
 import com.inputdto.PostCardTypeDTO;
 import com.inputdto.PatchCardTypeDTO;
-import com.inputdto.PatchCardTypeParameterDTO;
 import com.model.CardTag;
 import com.model.CardType;
 import com.outputdto.CardTypeReviewDTO;
